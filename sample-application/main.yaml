@@ -1,0 +1,20 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  S3BucketName:
+    Type: String
+    AllowedPattern: '[a-z-0-9]+'
+    ConstraintDescription: must not contain spaces or uppercase letters.
+
+Resources:
+  S3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
+    Properties:
+      BucketName: !Sub ${S3BucketName}
+
+Outputs:
+  S3BucketName:
+    Description: S3 Bucket name for Athena
+    Value: !Ref S3BucketName

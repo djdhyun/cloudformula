@@ -1,0 +1,33 @@
+ROOT_DIR=$(cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd)
+source ${ROOT_DIR}/env.sh
+
+function deploy_stack() {
+    if [ $# -ne 2 ]; then
+        printf "Usage: deploy_stack [stack name] [properties name]\n"
+        return 1
+    fi
+
+    local stack=$1
+    local parameter=$2
+
+    local template_file="$stack/main.yaml"
+    local properties_file="$stack/$parameter.properties"
+
+
+    if [ ! -f "$template_file" ]; then
+        echo "$template_file does not exist."
+        return 1
+    fi
+
+    if [ ! -f "$properties_file" ]; then
+        local _ret=$?
+        echo "$properties_file does not exist."
+        return 1
+    fi
+
+    $AWS cloudformation deploy \
+        --template-file $template_file \
+        --stack-name $stack \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --parameter-overrides $(cat $properties_file)
+}
