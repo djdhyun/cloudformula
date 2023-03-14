@@ -23,7 +23,7 @@
     └── prod.properties
 ```
 
-![stacks alt ><](assets/cloudformation_stack.png)
+<img src="assets/cloudformation_stack.png" width="540px" />
 
 * Each directory names corresponds with each CloudFormation stacks.
 * `main.yaml`: A Cloudformation template that Defines all resources for the stack.
