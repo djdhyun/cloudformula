@@ -14,6 +14,9 @@
 ```bash
 ├── Makefile
 ├── README.md
+├── common
+│   ├── main.yaml
+│   └── prod.properties
 ├── sample-application
 │   ├── main.yaml
 │   └── prod.properties
@@ -29,6 +32,10 @@
 * `main.yaml`: A Cloudformation template that Defines all resources for the stack.
 * `${env}.properties`: Parameters to be applied to the template for the target environment.
 
+### Operations via make
+
+* `make lint`: Run linter on all Cloudformation template files.
+* `make deploy-all`: Deploy all changesets or new stacks to Cloudformation.
 
 ### Template Validation (Lint)
 
@@ -36,7 +43,7 @@
 * To run linter across all templates in the repo.
     * `make lint`
 
-### Deploy a stack manually via aws console
+### Deploy a specific stack via manual commands in terminal
 
 * `deploy_stack sample-application prod`
 * ..or run the aws command below directly
