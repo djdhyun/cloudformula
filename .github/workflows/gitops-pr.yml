@@ -1,0 +1,50 @@
+name: Cloudformation GitOps
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, ready_for_review]
+
+jobs:
+  list-stacks:
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.matrix.outputs.stacks }}
+    steps:
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: "**/*.{yaml,yml,properties}"
+          files_ignore: .github/workflows/**
+
+      - name: Run step if any file(s) in the docs folder change
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "List all the files that have changed: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}"
+          echo "stacks=${{ toJson(steps.changed-files.outputs.all_changed_files) }}" >> $GITHUB_OUTPUT
+          # sample-application/prod.properties 
+          # sample-application/main.yaml
+
+  plan:
+    needs: [ list-stacks ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Check out Repository code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GithubActionSessionCTCI
+ 
+      - run: |
+          echo "${{ matrix.value }}"       
