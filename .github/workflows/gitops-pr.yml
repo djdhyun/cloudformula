@@ -1,4 +1,4 @@
-name: Make plan on Pull Request
+name: Make all change plans
 
 on:
   pull_request:
