@@ -21,19 +21,17 @@ jobs:
           files: "**/*.{yaml,yml,properties}"
           files_ignore: .github/workflows/**
 
-      - name: Run step if any file(s) in the docs folder change
+      - name: Get changed stacks
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          echo "ss : ${{ steps.changed-files.outputs.all_changed_files }}"
           stacks=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq)
           echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq
           echo $stacks
-          A=1
-          echo $A
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
 
   plan:
     needs: [ list-stacks ]
+    if: false
     runs-on: ubuntu-latest
     strategy:
       matrix:
