@@ -26,7 +26,7 @@ jobs:
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           stacks=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq)
-          stacks=$(echo "[\"${stacks// /\", \"}\"]")
+          stacks=$(echo "[\"${stacks//[[:space:]]/\", \"}\"]")
           echo $stacks
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
 
@@ -41,7 +41,7 @@ jobs:
       contents: read
     steps:
       - run: |
-          echo "${{ needs.list-stacks.outputs.stacks }}"
+          echo "${{ matrix.value }}"
 
       - name: Check out Repository code
         uses: actions/checkout@v3
