@@ -35,15 +35,15 @@ jobs:
   plan:
     needs: [ list-stacks ]
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
+    #strategy:
+    #  matrix:
+    #    value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
     permissions:
       id-token: write
       contents: read
     steps:
       - run: |
-          echo "${{ matrix.value }}"       
+          echo "${{ needs.list-stacks.outputs.stacks }}"
 
       - name: Check out Repository code
         uses: actions/checkout@v3
