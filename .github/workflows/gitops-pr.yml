@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
+        value: ${{ needs.list-stacks.outputs.stacks }}
     permissions:
       id-token: write
       contents: read
