@@ -5,6 +5,11 @@ Parameters:
     Type: String
     AllowedPattern: '[a-z-0-9]+'
     ConstraintDescription: must not contain spaces or uppercase letters.
+  TagName1:
+    Type: String
+  TagName2:
+    Type: String
+
 
 Resources:
   S3Bucket:
@@ -13,6 +18,11 @@ Resources:
     UpdateReplacePolicy: Retain
     Properties:
       BucketName: !Sub ${S3BucketName}
+      Tags:
+        - Key: "SampleProp1"
+          Value: !Sub ${TagName1}
+        - Key: "SampleProp2"
+          Value: !Sub ${TagName2}
 
 Outputs:
   S3BucketName:
