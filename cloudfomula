@@ -30,9 +30,10 @@ function arn_stack() {
     ret=$($AWS cloudformation list-stacks \
         --no-paginate \
         --query "StackSummaries[?StackName=='$_stack' && !contains([$deletion_filter], StackStatus)].StackId" \
-        --output text)
+        --output text || true)
 
     if [ -z "$ret" ]; then
+        echo "No active stack for [$_stack]" >&2
         return 1
     fi
 
@@ -44,9 +45,10 @@ function arn_changeset() {
         --stack-name "$_stack" \
         --no-paginate \
         --query "Summaries[?ChangeSetName=='$_changeset'].ChangeSetId" \
-        --output text)
+        --output text || true)
 
     if [ -z "$ret" ]; then
+        echo "No active changeset for [$_stack]" >&2
         return 1
     fi
 
@@ -57,6 +59,10 @@ function status_changeset() {
     local ret
     local arn=${1:-"$(arn_changeset)"}
 
+    if [ -z "$arn" ]; then
+        return 1
+    fi
+
     ret=$($AWS cloudformation describe-change-set \
         --change-set-name "$arn" \
         --no-paginate \
@@ -65,16 +71,30 @@ function status_changeset() {
 
     if [ -z "$ret" ]; then
         return 1
+    elif [[ "$ret" == "UNAVAILABLE" ]]; then
+        $AWS cloudformation describe-change-set \
+            --change-set-name "$arn" \
+            --no-paginate \
+            --query StatusReason \
+            --output text >&1
+        return 1
+    else
+        echo "$ret"
     fi
-
-    echo "$ret"
 }
 
 function describe_changeset() {
     local ret
+    local arn
+
+    arn=$(arn_changeset)
+    if [ -z "$arn" ]; then
+        echo "There's no active changeset for ""$_stack"""
+        return 1
+    fi
 
     ret=$($AWS cloudformation describe-change-set \
-        --change-set-name "$(arn_changeset)" \
+        --change-set-name "$arn" \
         --no-paginate \
         --query Changes \
         --output json)
@@ -83,15 +103,25 @@ function describe_changeset() {
 }
 
 function delete_changeset() {
+    local arn
+    arn=$(arn_changeset)
+
     $AWS cloudformation delete-change-set \
-        --change-set-name "$(arn_changeset)"
+        --change-set-name "$arn"
 }
 
 function execute_changeset() {
     local ret
     local arn
-
     arn=$(arn_changeset)
+
+    # If the change set doesn't contain any changes, 
+    # just generously ends the code by deleting it.
+    if [[ "$(describe_changeset)" == "[]" ]]; then
+        delete_changeset
+        return 0
+    fi
+
     $AWS cloudformation execute-change-set \
         --change-set-name "$arn"
     
@@ -126,14 +156,14 @@ function create_changeset() {
     local change_type
 
     # 1. Check if stack exists
-    if [ -z "$(arn_stack)" ]; then
+    if [ -z "$(arn_stack 2> /dev/null)" ]; then
         change_type="CREATE"
     else
         change_type="UPDATE"
     fi
 
     # 2. Delete previous change sets if exists
-    delete_changeset || true
+    delete_changeset 2> /dev/null || true
     
     # 3. Create a change set
     ret=$($AWS cloudformation create-change-set \
@@ -156,7 +186,7 @@ function create_changeset() {
         fi
     done
     if [[ ${#ret} -lt 10 ]]; then
-        echo "Retrieving changeset failed after multiple attempts"
+        echo "Retrieving changeset failed after multiple attempts" >&2
         return 1
     fi
 
@@ -197,13 +227,13 @@ function main {
     set --
 
     case "$_command" in
-        create_changeset|create)
+        create_changeset|plan)
             create_changeset
             ;;
-        delete_changeset|delete)
+        delete_changeset|abort)
             delete_changeset
             ;;
-        describe_changeset|plan)
+        describe_changeset|describe)
             describe_changeset
             ;;
         execute_changeset|apply)
@@ -222,7 +252,7 @@ function main {
             arn_changeset
             ;;
         *)
-            echo "Invalid subcommand: $1"
+            echo "Invalid subcommand: $_command"
             exit 1
             ;;
     esac
