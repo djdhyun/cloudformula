@@ -26,6 +26,7 @@ jobs:
         run: |
           echo "ss : ${{ steps.changed-files.outputs.all_changed_files }}"
           stacks=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq)
+          echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq
           echo $stacks
           A=1
           echo $A
