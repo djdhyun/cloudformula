@@ -9,7 +9,7 @@ jobs:
   list-stacks:
     runs-on: ubuntu-latest
     outputs:
-      stacks: ${{ steps.matrix.outputs.stacks }}
+      stacks: ${{ steps.changed-stacks.outputs.stacks }}
     steps:
       - name: Check out Repository code
         uses: actions/checkout@v3
@@ -22,6 +22,7 @@ jobs:
           files_ignore: .github/workflows/**
 
       - name: Get changed stacks
+        id: changed-stacks
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
           stacks=$(echo "${{ steps.changed-files.outputs.all_changed_files }}" | tr ' ' '\n' | cut -d'/' -f1 | uniq)
@@ -29,6 +30,7 @@ jobs:
           stacks="[$stacks]"
           echo $stacks
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
+          //echo '::set-output stacks=value::[\"a\", \"b\", \"c\"]'
 
   plan:
     needs: [ list-stacks ]
