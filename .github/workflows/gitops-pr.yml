@@ -26,7 +26,7 @@ jobs:
         run: |
           echo "ss : ${{ steps.changed-files.outputs.all_changed_files }}"
           stacks=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | tr ' ' '\n' | cut -d'/' -f1 | uniq)
-          echo "stacks="$stacks" >> $GITHUB_OUTPUT
+          echo "stacks="$stacks"" >> $GITHUB_OUTPUT
 
   plan:
     needs: [ list-stacks ]
