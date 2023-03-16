@@ -26,6 +26,7 @@ jobs:
         run: |
           echo "ss : ${{ steps.changed-files.outputs.all_changed_files }}"
           stacks=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | tr ' ' '\n' | cut -d'/' -f1 | uniq)
+          echo $stacks
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
 
   plan:
@@ -33,13 +34,17 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
+        value: ${{ needs.list-stacks.outputs.stacks }}
     permissions:
       id-token: write
       contents: read
     steps:
+      - run: |
+          echo "${{ matrix.value }}"       
+
       - name: Check out Repository code
         uses: actions/checkout@v3
+        if: false
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@master
@@ -47,6 +52,5 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GithubActionSessionCTCI
+        if: false
  
-      - run: |
-          echo "${{ matrix.value }}"       
