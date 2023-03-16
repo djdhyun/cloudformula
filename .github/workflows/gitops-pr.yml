@@ -36,11 +36,7 @@ jobs:
     strategy:
       matrix:
         value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
-    permissions:
-      id-token: write
-      contents: read
-      pull-requests: read
-      issues: write
+    permissions: write-all
     steps:
       - run: |
           echo "${{ matrix.value }}"
