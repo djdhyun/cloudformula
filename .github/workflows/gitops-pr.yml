@@ -11,6 +11,9 @@ jobs:
     outputs:
       stacks: ${{ steps.matrix.outputs.stacks }}
     steps:
+      - name: Check out Repository code
+        uses: actions/checkout@v3
+
       - name: Get changed files
         id: changed-files
         uses: tj-actions/changed-files@v35
