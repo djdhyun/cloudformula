@@ -30,7 +30,7 @@ jobs:
           stacks="[$stacks]"
           echo $stacks
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
-          //echo '::set-output stacks=value::[\"a\", \"b\", \"c\"]'
+          #echo '::set-output stacks=value::[\"a\", \"b\", \"c\"]'
 
   plan:
     needs: [ list-stacks ]
