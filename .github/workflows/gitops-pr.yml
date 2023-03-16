@@ -24,10 +24,9 @@ jobs:
       - name: Run step if any file(s) in the docs folder change
         if: steps.changed-files.outputs.any_changed == 'true'
         run: |
-          echo "List all the files that have changed: ${{ toJson(steps.changed-files.outputs.all_changed_files) }}"
-          echo "stacks=${{ toJson(steps.changed-files.outputs.all_changed_files) }}" >> $GITHUB_OUTPUT
-          # sample-application/prod.properties 
-          # sample-application/main.yaml
+          echo "ss : ${{ steps.changed-files.outputs.all_changed_files }}"
+          stacks=$(echo ${{ steps.changed-files.outputs.all_changed_files }} | tr ' ' '\n' | cut -d'/' -f1 | uniq)
+          echo "stacks=${{ stacks }}" >> $GITHUB_OUTPUT
 
   plan:
     needs: [ list-stacks ]
