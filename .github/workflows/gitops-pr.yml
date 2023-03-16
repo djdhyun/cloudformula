@@ -39,6 +39,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      issues: write
     steps:
       - run: |
           echo "${{ matrix.value }}"
