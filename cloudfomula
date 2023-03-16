@@ -1,0 +1,231 @@
+#!/bin/bash
+set -e
+    
+# envs
+AWS=${AWS:-aws}
+
+function deploy_stacks() {
+    if [ $# -lt 1 ]; then
+        printf "Usage: deploy_stack [...stacks]\n"
+        return 1
+    fi
+
+    local _env
+
+    for stack in "$@"
+    do
+        for PROPERTIES_FILE in "$_stack"/*.properties;
+        do
+            _env=$("$(basename "$PROPERTIES_FILE")" | cut -d. -f1)
+            deploy_stack "$_stack" "$_env"
+        done
+    done
+
+    return 0
+}
+
+function arn_stack() {
+    local deletion_filter="'REVIEW_IN_PROGRESS', 'DELETE_COMPLETE', 'CREATE_FAILED'"
+
+    ret=$($AWS cloudformation list-stacks \
+        --no-paginate \
+        --query "StackSummaries[?StackName=='$_stack' && !contains([$deletion_filter], StackStatus)].StackId" \
+        --output text)
+
+    if [ -z "$ret" ]; then
+        return 1
+    fi
+
+    echo "$ret"
+}
+
+function arn_changeset() {
+    ret=$($AWS cloudformation list-change-sets \
+        --stack-name "$_stack" \
+        --no-paginate \
+        --query "Summaries[?ChangeSetName=='$_changeset'].ChangeSetId" \
+        --output text)
+
+    if [ -z "$ret" ]; then
+        return 1
+    fi
+
+    echo "$ret"
+}
+
+function status_changeset() {
+    local ret
+    local arn=${1:-"$(arn_changeset)"}
+
+    ret=$($AWS cloudformation describe-change-set \
+        --change-set-name "$arn" \
+        --no-paginate \
+        --query ExecutionStatus \
+        --output text)
+
+    if [ -z "$ret" ]; then
+        return 1
+    fi
+
+    echo "$ret"
+}
+
+function describe_changeset() {
+    local ret
+
+    ret=$($AWS cloudformation describe-change-set \
+        --change-set-name "$(arn_changeset)" \
+        --no-paginate \
+        --query Changes \
+        --output json)
+
+    echo "$ret"
+}
+
+function delete_changeset() {
+    $AWS cloudformation delete-change-set \
+        --change-set-name "$(arn_changeset)"
+}
+
+function execute_changeset() {
+    local ret
+    local arn
+
+    arn=$(arn_changeset)
+    $AWS cloudformation execute-change-set \
+        --change-set-name "$arn"
+    
+    # Wait until the execution is finished
+    for _ in {1..50}; do
+        sleep 10
+        ret=$(status_changeset "$arn" 2> /dev/null || true)
+        if [[ "$ret" == "AVAILABLE" ]]; then
+            continue
+        elif [[ "$ret" != "EXECUTE_IN_PROGRESS" ]]; then
+            break
+        elif [ -z "$ret" ]; then
+            break
+        fi
+    done
+
+    if [[ "$ret" == "EXECUTE_COMPLETE" ]]; then
+        echo "Excution has been successfully completed!!"
+    elif [[ "$ret" == "EXECUTE_FAILED" ]]; then
+        echo "Excution has been failed"
+    elif [[ "$ret" == "EXECUTE_IN_PROGRESS" ]]; then
+        echo "Execution is taking too long. Please check it later manually"
+    elif [[ "$ret" == "AVAILABLE" ]]; then
+        echo "Execution is taking too long. Please check it later manually"
+    else
+        echo "Execution ended with an unknown status"
+    fi
+}
+
+function create_changeset() {
+    local ret
+    local change_type
+
+    # 1. Check if stack exists
+    if [ -z "$(arn_stack)" ]; then
+        change_type="CREATE"
+    else
+        change_type="UPDATE"
+    fi
+
+    # 2. Delete previous change sets if exists
+    delete_changeset || true
+    
+    # 3. Create a change set
+    ret=$($AWS cloudformation create-change-set \
+        --template-body file://"$_template_file" \
+        --parameters file://"$_properties_file" \
+        --stack-name "$_stack" \
+        --change-set-type "$change_type" \
+        --capabilities CAPABILITY_NAMED_IAM \
+        --no-paginate \
+        --query Id \
+        --output text \
+        --change-set-name "$_changeset")
+
+    # 4. Wait until change set is ready
+    for _ in {1..5}; do
+        sleep 5
+        ret=$(arn_changeset 2> /dev/null || true)
+        if [[ ${#ret} -gt 10 ]]; then
+            break
+        fi
+    done
+    if [[ ${#ret} -lt 10 ]]; then
+        echo "Retrieving changeset failed after multiple attempts"
+        return 1
+    fi
+
+    echo "$ret"
+}
+
+function export_common_vars() {
+    if [ $# -lt 3 ]; then
+        printf "Usage: %s %s [stack name] [properties name] [changeset_suffix?]\n" "$0" "${1:-[subcommand]}"
+        return 1
+    fi
+
+    local stack=$2
+    local suffix=${4:+"-$4"}
+
+    export _env=$3
+    export _changeset="cs-$stack-$_env$suffix"
+    export _template_file="$stack/main.yaml"
+    export _properties_file="$stack/$_env.properties"
+    export _stack="$stack-$_env"
+
+    if [ ! -f "$_template_file" ]; then
+        echo "$_template_file does not exist."
+        return 1
+    fi
+
+    if [ ! -f "$_properties_file" ]; then
+        echo "$_properties_file does not exist."
+        return 1
+    fi
+
+    return 0
+}
+
+function main {
+    local _command=$1
+    export_common_vars "$@"
+    set --
+
+    case "$_command" in
+        create_changeset|create)
+            create_changeset
+            ;;
+        delete_changeset|delete)
+            delete_changeset
+            ;;
+        describe_changeset|plan)
+            describe_changeset
+            ;;
+        execute_changeset|apply)
+            execute_changeset
+            ;;
+        deploy_stack)
+            deploy_stack
+            ;;
+        arn_stack)
+            arn_stack
+            ;;
+        status_changeset)
+            status_changeset
+            ;;
+        arn_changeset)
+            arn_changeset
+            ;;
+        *)
+            echo "Invalid subcommand: $1"
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
