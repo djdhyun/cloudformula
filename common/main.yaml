@@ -38,15 +38,15 @@ Resources:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
       Policies:
-        - PolicyName: S3ReadAccess
+        - PolicyName: CloudFormationAccess
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
               - Effect: Allow
                 Action:
-                  - s3:*
+                  - cloudformation:*
                 Resource:
-                  - arn:aws:s3:::*
+                  - "*"
 
 
   GithubOidc:
