@@ -57,18 +57,11 @@ jobs:
           role-session-name: GithubActionSessionCTCI
         if: false
 
-      - name: GitHub API Request
-        if: steps.check.outputs.triggered == 'true'
-        id: request
-        uses: octokit/request-action@v2.0.0
-        with:
-          route: ${{ github.event.issue.pull_request.url }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Comment PR
         uses: thollander/actions-comment-pull-request@v2
         with:
+          comment_tag: hih
+          mode: upsert
           message: |
             Hello world ! :wave:
  
