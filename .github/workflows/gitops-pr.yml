@@ -48,7 +48,6 @@ jobs:
         run: |
           make plan
           make comment 2> cmd.err > cmd.out || true
-          delimiter="$(openssl rand -hex 8)"
 
           echo "result<<EOF" >> "${GITHUB_OUTPUT}"
           if [ -s cmd.err ]; then

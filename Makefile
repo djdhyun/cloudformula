@@ -10,10 +10,10 @@ lint:
 .PHONY: check_params
 check_params:
 	@if [ -z "${STACK}" ]; then \
-		echo "Usage: STACK={stack_name} CID={changeset_suffix?} make plan"; \
+		echo "Usage: STACK={stack_name} CID={changeset_suffix?} make plan" >&2; \
 		exit 1; \
 	elif [ ! -d "${STACK}" ]; then \
-		echo "Error: directory '${STACK}' does not exist"; \
+		echo "Error: directory '${STACK}' does not exist" >&2; \
 		exit 1; \
 	fi
 
