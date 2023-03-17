@@ -9,9 +9,7 @@ jobs:
   list-stacks:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
       - name: Get changed stacks
-        id: changed-stacks
         uses: ./.github/workflows/gitops-list-stacks.yml
 
   plan:

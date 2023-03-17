@@ -1,7 +1,7 @@
-name: Make all change plans
+name: Listing Target Stacks
 
 on:
-  workflow_run:
+  workflow_call:
 
 jobs:
   list-stacks:
