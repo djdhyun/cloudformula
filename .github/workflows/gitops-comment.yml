@@ -1,18 +1,23 @@
+name: Cloudformation GitOps
+
 on:
   issue_comment:
-    types: [created, edited]
+    types: [created]
 
 jobs:
-  deploy:
+  issue-command:
+    if: ${{ github.event_name == 'issue_comment' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: khan/pull-request-comment-trigger@master
+      - name: Comment Trigger
+        uses: khan/pull-request-comment-trigger@master
         id: check
         with:
-          trigger: 'TRIGGER WORKFLOW'
+          trigger: 'cloudformula'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+
       - name: GitHub API Request
         if: steps.check.outputs.triggered == 'true'
         id: request
@@ -21,6 +26,7 @@ jobs:
           route: ${{ github.event.issue.pull_request.url }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Get PR informations
         if: steps.check.outputs.triggered == 'true'
         id: pr_data
@@ -29,17 +35,14 @@ jobs:
           echo "::set-output name=repo_name::${{ fromJson(steps.request.outputs.data).base.repo.full_name }}"
           echo "::set-output name=repo_clone_url::${{ fromJson(steps.request.outputs.data).base.repo.clone_url }}"
           echo "::set-output name=repo_ssh_url::${{ fromJson(steps.request.outputs.data).base.repo.ssh_url }}"
+
       - name: clone branch of PR
         if: steps.check.outputs.triggered == 'true'
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{ steps.pr_data.outputs.branch }}
+
       - name: Save comment in file
         if: steps.check.outputs.triggered == 'true'
         run: echo ${{ toJSON(github.event.comment.body) }} > comments/$(date +"%s").txt
-      - uses: stefanzweifel/git-auto-commit-action@v4.1.1
-        if: steps.check.outputs.triggered == 'true'
-        with:
-          commit_message: commit comment timestamp
-

@@ -1,0 +1,73 @@
+name: Make all change plans
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, ready_for_review, closed]
+
+jobs:
+  list-stacks:
+    uses: ./.github/workflows/gitops-list-stacks.yml
+
+  plan:
+    needs: [ list-stacks ]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        value: ${{ fromJson(needs.list-stacks.outputs.stacks_json) }}
+    env:
+      stack: ${{ matrix.value }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+    permissions:
+      id-token: write
+      contents: read
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Check out Repository code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@master
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
+          aws-region: ${{ secrets.AWS_REGION }}
+          role-session-name: GithubActionSessionCTCI
+
+      - name: CloudFormula Plans
+        id: plan
+        run: |
+          STACK=$stack make plan
+          STACK=$stack make comment 2> cmd.err > cmd.out || true
+          delimiter="$(openssl rand -hex 8)"
+
+          echo "result<<EOF" >> "${GITHUB_OUTPUT}"
+          if [ -s cmd.err ]; then
+            echo "// The following errors occurred:" >> "${GITHUB_OUTPUT}"
+            cat cmd.err >> "${GITHUB_OUTPUT}"
+          fi
+
+          cat cmd.out >> "${GITHUB_OUTPUT}"
+
+          echo "EOF" >> "${GITHUB_OUTPUT}"
+
+      - name: Comment PR
+        if: steps.plan.outputs.result != ''
+
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## Change Plans have been created ✈️
+
+            ${{ steps.plan.outputs.result }}
+
+            Now, you may want to run the following commands as a next step.
+
+            * cloudformula apply ${{ env.stack }}
+            * cloudformula abort ${{ env.stack }}
+
+      - name: CloudFormula Cleanup
+        id: cleanup
+        if: github.event.action == 'closed'
+        run: |
+          STACK=$stack make abort || true

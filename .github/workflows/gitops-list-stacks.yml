@@ -1,0 +1,34 @@
+name: Listing Target Stacks
+
+on:
+  workflow_call:
+    outputs:
+      stacks_json:
+        description: "Stack list in json format"
+        value: ${{ jobs.list-stacks.outputs.stacks }}
+
+jobs:
+  list-stacks:
+    runs-on: ubuntu-latest
+    outputs:
+      stacks: ${{ steps.changed-stacks.outputs.stacks }}
+    steps:
+      - name: Check out Repository code
+        uses: actions/checkout@v3
+
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v35
+        with:
+          files: "**/*.{yaml,yml,properties}"
+          files_ignore: .github/workflows/**
+
+      - name: Get changed stacks
+        id: changed-stacks
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          stacks="${{ steps.changed-files.outputs.all_changed_files }}"
+          stacks=$(echo ${stacks} | tr ' ' '\n' | cut -d'/' -f1 | uniq)
+          stacks=$(echo "[\"${stacks//[[:space:]]/\", \"}\"]")
+          echo $stacks
+          echo "stacks="$stacks"" >> $GITHUB_OUTPUT

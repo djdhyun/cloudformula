@@ -3,6 +3,7 @@ set -e
     
 # envs
 AWS=${AWS:-aws}
+AWS_REGION=${AWS_REGION:-${AWS_DEFAULT_REGION}}
 
 function deploy_stacks() {
     if [ $# -lt 1 ]; then
@@ -40,6 +41,15 @@ function arn_stack() {
     echo "$ret"
 }
 
+function url_stack() {
+    local url="https://${AWS_REGION}.console.aws.amazon.com"
+    url="$url/cloudformation/home?region=${AWS_REGION}#"
+    url="$url/stacks/stackInfo"
+    url="$url?stackId=$(arn_stack)"
+
+    echo "$url"
+}
+
 function arn_changeset() {
     ret=$($AWS cloudformation list-change-sets \
         --stack-name "$_stack" \
@@ -53,6 +63,16 @@ function arn_changeset() {
     fi
 
     echo "$ret"
+}
+
+function url_changeset() {
+    local url="https://${AWS_REGION}.console.aws.amazon.com"
+    url="$url/cloudformation/home?region=${AWS_REGION}#"
+    url="$url/stacks/changesets/changes"
+    url="$url?stackId=$(arn_stack)"
+    url="$url&changeSetId=$(arn_changeset)"
+
+    echo "$url"
 }
 
 function status_changeset() {
@@ -101,6 +121,17 @@ function describe_changeset() {
 
     echo "$ret"
 }
+
+function pretty_changeset() {
+    echo "Cloudformation Stack: [\`$_stack\`]($(url_stack))"
+    echo "Cloudformation Changeset: [\`$_changeset\`]($(url_changeset))"
+    echo ""
+    echo "\`\`\`json"
+    describe_changeset
+    echo "\`\`\`"
+}
+
+
 
 function delete_changeset() {
     local arn
@@ -190,7 +221,7 @@ function create_changeset() {
         return 1
     fi
 
-    echo "$ret"
+    return 0
 }
 
 function export_common_vars() {
@@ -236,14 +267,23 @@ function main {
         describe_changeset|describe)
             describe_changeset
             ;;
+        pretty_changeset|comment)
+            pretty_changeset
+            ;;
         execute_changeset|apply)
             execute_changeset
+            ;;
+        url_changeset|url)
+            url_changeset
             ;;
         deploy_stack)
             deploy_stack
             ;;
         arn_stack)
             arn_stack
+            ;;
+        url_stack)
+            url_stack
             ;;
         status_changeset)
             status_changeset
