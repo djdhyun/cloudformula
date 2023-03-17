@@ -16,7 +16,7 @@ jobs:
       matrix:
         value: ${{ fromJson(needs.list-stacks.outputs.stacks_json) }}
     env:
-      stack: ${{ matrix.value }}
+      STACK: ${{ matrix.value }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
     permissions:
       id-token: write
@@ -34,12 +34,20 @@ jobs:
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GithubActionSessionCTCI
 
+      - name: Determine Plan ID
+        id: cid
+        run: |
+          pr=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
+          echo "cid=pr$pr" >> $GITHUB_OUTPUT
+
       - name: CloudFormula Plans
         if: github.event.action != 'closed'
+        env:
+          CID: ${{ steps.cid.outputs.cid }}
         id: plan
         run: |
-          STACK=$stack make plan
-          STACK=$stack make comment 2> cmd.err > cmd.out || true
+          make plan
+          make comment 2> cmd.err > cmd.out || true
           delimiter="$(openssl rand -hex 8)"
 
           echo "result<<EOF" >> "${GITHUB_OUTPUT}"
@@ -64,11 +72,13 @@ jobs:
 
             Now, you may want to run the following commands as a next step.
 
-            * cloudformula apply ${{ env.stack }}
-            * cloudformula abort ${{ env.stack }}
+            * cloudformula apply ${{ env.STACK }} ${{ env.CID }}
+            * cloudformula abort ${{ env.STACK }} ${{ env.CID }}
 
       - name: CloudFormula Cleanup
         id: cleanup
+        env:
+          CID: ${{ steps.cid.outputs.cid }}
         if: github.event.action == 'closed'
         run: |
-          STACK=$stack make abort || true
+          make abort || true
