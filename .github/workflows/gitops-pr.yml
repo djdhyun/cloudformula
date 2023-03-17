@@ -76,13 +76,11 @@ jobs:
 
         uses: thollander/actions-comment-pull-request@v2
         with:
-          comment_tag: hih
-          mode: upsert
           message: |
             [${{ env.stack }}] Changesets has been created
 
             ```sh
-            ${{ steps.fmt.outputs.zig_fmt_errs }}
+            ${{ steps.run.outputs.result }}
             ```
 
             You can run either of these
