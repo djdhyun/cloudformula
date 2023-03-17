@@ -46,7 +46,6 @@ jobs:
     steps:
       - name: Check out Repository code
         uses: actions/checkout@v3
-        if: false
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@master
