@@ -61,7 +61,7 @@ jobs:
           STACK=$stack make echo 2> cmd.err > cmd.out || echo "Failed"
           delimiter="$(openssl rand -hex 8)"
 
-          echo "result << ${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo "result<<${delimiter}" >> "${GITHUB_OUTPUT}"
           if [ -s cmd.err ]; then
             echo "// The following errors occurred:" >> "${GITHUB_OUTPUT}"
             cat cmd.err >> "${GITHUB_OUTPUT}"
