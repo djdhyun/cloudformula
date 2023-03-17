@@ -35,6 +35,7 @@ jobs:
           role-session-name: GithubActionSessionCTCI
 
       - name: CloudFormula Plans
+        if: github.event.action != 'closed'
         id: plan
         run: |
           STACK=$stack make plan
@@ -52,7 +53,7 @@ jobs:
           echo "EOF" >> "${GITHUB_OUTPUT}"
 
       - name: Comment PR
-        if: steps.plan.outputs.result != ''
+        if: steps.plan.outputs.result != '' && github.event.action != 'closed'
 
         uses: thollander/actions-comment-pull-request@v2
         with:
