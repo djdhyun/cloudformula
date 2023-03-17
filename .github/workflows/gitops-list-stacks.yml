@@ -2,6 +2,10 @@ name: Listing Target Stacks
 
 on:
   workflow_call:
+    outputs:
+      stacks_json:
+        description: "Stack list in json format"
+        value: ${{ jobs.list-stacks.outputs.stacks }}
 
 jobs:
   list-stacks:
@@ -26,4 +30,5 @@ jobs:
           stacks="${{ steps.changed-files.outputs.all_changed_files }}"
           stacks=$(echo ${stacks} | tr ' ' '\n' | cut -d'/' -f1 | uniq)
           stacks=$(echo "[\"${stacks//[[:space:]]/\", \"}\"]")
+          echo $stacks
           echo "stacks="$stacks"" >> $GITHUB_OUTPUT
