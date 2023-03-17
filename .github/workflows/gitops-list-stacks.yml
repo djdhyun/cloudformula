@@ -1,11 +1,8 @@
 name: Make all change plans
 
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, ready_for_review]
-  issue_comment:
-    
+  workflow_run:
+
 jobs:
   list-stacks:
     runs-on: ubuntu-latest
