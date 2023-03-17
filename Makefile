@@ -25,7 +25,7 @@ plan: check_params
 	done
 
 .PHONY: apply
-apply: check_params plan
+apply: check_params
 	@for file in "${STACK}/*.properties"; do \
         env=$$(basename $${file} | cut -d'.' -f 1); \
 		${CLOUDFOMULA} apply ${STACK} $${env} ${CID}; \
@@ -36,6 +36,13 @@ abort: check_params
 	@for file in "${STACK}/*.properties"; do \
         env=$$(basename $${file} | cut -d'.' -f 1); \
 		${CLOUDFOMULA} abort ${STACK} $${env} ${CID}; \
+	done
+
+.PHONY: comment
+comment: check_params
+	@for file in "${STACK}/*.properties"; do \
+        env=$$(basename $${file} | cut -d'.' -f 1); \
+		${CLOUDFOMULA} comment ${STACK} $${env} ${CID}; \
 	done
 
 .PHONY: echo

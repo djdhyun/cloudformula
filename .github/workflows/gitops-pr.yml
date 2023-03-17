@@ -38,6 +38,7 @@ jobs:
         value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
     env:
       stack: ${{ matrix.value }}
+      AWS_REGION: ${{ secrets.AWS_REGION }}
     permissions:
       id-token: write
       contents: read
@@ -56,12 +57,13 @@ jobs:
         if: false
 
       - name: Make CloudFormula Plans
-        id: run
+        id: plan
         run: |
-          STACK=$stack make echo 2> cmd.err > cmd.out || echo "Failed"
+          STACK=$stack make plan
+          STACK=$stack make comment 2> cmd.err > cmd.out || true
           delimiter="$(openssl rand -hex 8)"
 
-          echo "result<<${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo "result<<EOF" >> "${GITHUB_OUTPUT}"
           if [ -s cmd.err ]; then
             echo "// The following errors occurred:" >> "${GITHUB_OUTPUT}"
             cat cmd.err >> "${GITHUB_OUTPUT}"
@@ -69,19 +71,17 @@ jobs:
 
           cat cmd.out >> "${GITHUB_OUTPUT}"
 
-          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
+          echo "EOF" >> "${GITHUB_OUTPUT}"
 
       - name: Comment PR
-        if: steps.run.outputs.result != ''
+        if: steps.plan.outputs.result != ''
 
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            [${{ env.stack }}] Changesets has been created
+            ## Change Plans have been created ✈️
 
-            ```sh
-            ${{ steps.run.outputs.result }}
-            ```
+            ${{ steps.plan.outputs.result }}
 
             You can run either of these
 
