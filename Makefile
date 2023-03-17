@@ -7,8 +7,8 @@ STACKS=sample-application
 lint:
 	@find . -name "*.yaml" | xargs cfn-lint
 
-.PHONY: params
-params:
+.PHONY: check_params
+check_params:
 	@if [ -z "${STACK}" ]; then \
 		echo "Usage: STACK={stack_name} CID={changeset_suffix?} make plan"; \
 		exit 1; \
@@ -18,22 +18,30 @@ params:
 	fi
 
 .PHONY: plan
-plan: params
+plan: check_params
 	@for file in "${STACK}/*.properties"; do \
         env=$$(basename $${file} | cut -d'.' -f 1); \
 		${CLOUDFOMULA} plan ${STACK} $${env} ${CID}; \
 	done
 
 .PHONY: apply
-apply: plan
+apply: check_params plan
 	@for file in "${STACK}/*.properties"; do \
         env=$$(basename $${file} | cut -d'.' -f 1); \
 		${CLOUDFOMULA} apply ${STACK} $${env} ${CID}; \
 	done
 
 .PHONY: abort
-abort:
+abort: check_params
 	@for file in "${STACK}/*.properties"; do \
         env=$$(basename $${file} | cut -d'.' -f 1); \
 		${CLOUDFOMULA} abort ${STACK} $${env} ${CID}; \
+	done
+
+.PHONY: echo
+echo: check_params
+	@for file in "${STACK}/*.properties"; do \
+		echo $${file} >&2; \
+		cat $${file}; \
+		echo ""; \
 	done

@@ -36,15 +36,14 @@ jobs:
     strategy:
       matrix:
         value: ${{ fromJson(needs.list-stacks.outputs.stacks) }}
+    env:
+      stack: ${{ matrix.value }}
     permissions:
       id-token: write
       contents: read
       pull-requests: write
       issues: write
     steps:
-      - run: |
-          echo "${{ matrix.value }}"
-
       - name: Check out Repository code
         uses: actions/checkout@v3
         if: false
@@ -57,11 +56,38 @@ jobs:
           role-session-name: GithubActionSessionCTCI
         if: false
 
+      - name: Make CloudFormula Plans
+        id: run
+        run: |
+          STACK=$stack make echo 2> cmd.err > cmd.out || echo "Failed"
+          delimiter="$(openssl rand -hex 8)"
+
+          echo "result << ${delimiter}" >> "${GITHUB_OUTPUT}"
+          if [ -s cmd.err ]; then
+            echo "// The following errors occurred:" >> "${GITHUB_OUTPUT}"
+            cat cmd.err >> "${GITHUB_OUTPUT}"
+          fi
+
+          cat cmd.out >> "${GITHUB_OUTPUT}"
+
+          echo "${delimiter}" >> "${GITHUB_OUTPUT}"
+
       - name: Comment PR
+        if: steps.run.outputs.result != ''
+
         uses: thollander/actions-comment-pull-request@v2
         with:
           comment_tag: hih
           mode: upsert
           message: |
-            Hello world ! :wave:
+            [${{ env.stack }}] Changesets has been created
+
+            ```sh
+            ${{ steps.fmt.outputs.zig_fmt_errs }}
+            ```
+
+            You can run either of these
+
+            * cloudformula apply ${{ env.stack }}
+            * cloudformula abort ${{ env.stack }}
  
