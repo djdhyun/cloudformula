@@ -51,25 +51,44 @@ jobs:
           make plan
           make comment 2> cmd.err > cmd.out || true
 
-          echo "result<<EOF" >> "${GITHUB_OUTPUT}"
           if [ -s cmd.err ]; then
-            echo "// The following errors occurred:" >> "${GITHUB_OUTPUT}"
+            echo "message<<EOF" >> "${GITHUB_OUTPUT}"
             cat cmd.err >> "${GITHUB_OUTPUT}"
+            echo "EOF" >> "${GITHUB_OUTPUT}"
+            echo "success=false" >> "${GITHUB_OUTPUT}"
+            echo "command=${args}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "message<<EOF" >> "${GITHUB_OUTPUT}"
+            cat cmd.out >> "${GITHUB_OUTPUT}"
+            echo "EOF" >> "${GITHUB_OUTPUT}"
+            echo "success=true" >> "${GITHUB_OUTPUT}"
+            echo "command=${args}" >> "${GITHUB_OUTPUT}"
           fi
 
-          cat cmd.out >> "${GITHUB_OUTPUT}"
+      - name: Comment on Failure
+        if: steps.plan.outputs.success == 'false'
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## CloudFormula Command Failed ⚠ 
 
-          echo "EOF" >> "${GITHUB_OUTPUT}"
+            * Command: `${{ steps.plan.outputs.command }}`
 
-      - name: Comment PR
-        if: steps.plan.outputs.result != '' && github.event.action != 'closed'
+            ```sh
+            ${{ steps.plan.outputs.message }}
+            ```
+
+            Please check the status and resolve the issue via Cloudformation console if necessary.
+
+      - name: Comment on Success
+        if: steps.plan.outputs.success == 'true' && steps.plan.outputs.message != '' && github.event.action != 'closed'
 
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
             ## Change Plans have been created ✈️
 
-            ${{ steps.plan.outputs.result }}
+            ${{ steps.plan.outputs.message }}
 
             Now, you may want to run the following commands as a next step.
 
