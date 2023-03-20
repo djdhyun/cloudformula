@@ -57,10 +57,6 @@ Resources:
                 Resource:
                   - "*"
 
-
-
-
-
   GithubOidc:
     Type: AWS::IAM::OIDCProvider
     Condition: CreateOIDCProvider
