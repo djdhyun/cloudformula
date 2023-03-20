@@ -1,13 +1,10 @@
 name: CloudFormula
 on:
-  pull_request:
-    branches: [main]
-    types: [opened, synchronize, ready_for_review]
   issue_comment:
     types: [created]
 jobs:
   apply:
-    if: ${{ github.event.issue.pull_request }}
+    name: Apply Change Plans.
     runs-on: ubuntu-latest
     env:
       AWS_REGION: ${{ secrets.AWS_REGION }}
@@ -17,11 +14,8 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      - name: Turn into the Pending Mode
-        if: github.event_name == 'pull_request'
-        run: exit 1
       - name: Comment Trigger
-        if: github.event_name == 'issue_comment'
+        if: github.event.issue.pull_request
         uses: khan/pull-request-comment-trigger@master
         id: check
         with:
@@ -29,9 +23,11 @@ jobs:
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
+
       - name: Check out Repository code
         if: steps.check.outputs.triggered == 'true'
         uses: actions/checkout@v3
+
       - name: Configure AWS credentials
         if: steps.check.outputs.triggered == 'true'
         uses: aws-actions/configure-aws-credentials@master
@@ -39,12 +35,14 @@ jobs:
           role-to-assume: ${{ secrets.AWS_IAM_ROLE }}
           aws-region: ${{ secrets.AWS_REGION }}
           role-session-name: GithubActionSessionCTCI
+
       - name: Determine Plan ID
         if: steps.check.outputs.triggered == 'true'
         id: cid
         run: |
           pr=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
           echo "cid=pr$pr" >> $GITHUB_OUTPUT
+
       - name: CloudFormula Apply
         if: steps.check.outputs.triggered == 'true'
         env:
@@ -66,6 +64,7 @@ jobs:
             echo "EOF" >> "${GITHUB_OUTPUT}"
             echo "success=true" >> "${GITHUB_OUTPUT}"
           fi
+
       - name: Comment on Failure
         if: steps.check.outputs.triggered == 'true' && steps.apply.outputs.success == 'false'
         uses: thollander/actions-comment-pull-request@v2
@@ -76,6 +75,7 @@ jobs:
             ${{ steps.apply.outputs.message }}
             ```
             Please check the status and resolve the issue via Cloudformation console.
+
       - name: Comment on Success
         if: steps.check.outputs.triggered == 'true' && steps.apply.outputs.success == 'true'
         uses: thollander/actions-comment-pull-request@v2
