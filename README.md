@@ -7,13 +7,13 @@
     * `brew install cfn-lint` (for mac users only)
     * `pip install cfn-lint`
         * For further information, please refer to [this post](https://www.techielass.com/install-cfn-lint-on-windows)
-* Run `source source.me`
 
 ### Directory Structure
 
 ```bash
 ├── Makefile
 ├── README.md
+├── cloudfomula
 ├── common
 │   ├── main.yaml
 │   └── prod.properties
@@ -28,7 +28,7 @@
 
 <img src="assets/cloudformation_stack.png" width="540px" />
 
-* Each directory names corresponds with each CloudFormation stacks.
+* Each directory names corresponds with each CloudFormation stacks. The actual stack name is composed of `${stack_directory_name}-${properties_file_name}`
 * `main.yaml`: A Cloudformation template that Defines all resources for the stack.
 * `${env}.properties`: Parameters to be applied to the template for the target environment.
 
