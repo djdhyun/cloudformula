@@ -290,7 +290,7 @@ function main {
         status_changeset)
             status_changeset
             ;;
-        arn_changeset)
+        arn_changeset|arn)
             arn_changeset
             ;;
         *)
