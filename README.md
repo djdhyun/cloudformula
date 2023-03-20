@@ -29,7 +29,7 @@
 <img src="assets/cloudformation_stack.png" width="540px" />
 
 * Each directory names corresponds with each CloudFormation stacks. The actual stack name is composed of `${stack_directory_name}-${properties_file_name}`
-* `main.yaml`: A Cloudformation template that Defines all resources for the stack.
+* `main.yaml`: A Cloudformation template that defines all resources for the stack.
 * `${env}.properties`: Parameters to be applied to the template for the target environment.
 
 ## GitOps Scenario
@@ -41,7 +41,7 @@
 * Once your template is ready, you can use these command to apply it.
     * `./cloudformula plan github prod`
     * `./cloudformula apply github prod`
-* Further information about `cloudformula` will be continued in the following section
+* Further information about `cloudformula` will be continued in the following section.
 
 ### 1. Make Change Plans
 
@@ -70,7 +70,7 @@
 * It will breifly inform you the reason why you failed.
 * If you feel lack of information, you can move to Cloudformation console by clicking the links provided by the previous `plan` comment.
 * One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset.
-* Once you resolve the issue, you can add another commit to the pr to recreate changeset, or add a comment with "cloudformula plan ${stack\_directory\_name}". Try to apply it again when you're ready.
+* Once you resolve the issue, you can add another commit to the pr or add a comment with "cloudformula plan ${stack\_directory\_name}" to recreate changesets. Try to apply them again when you're ready.
 
 ### 4. End of the PR
 
