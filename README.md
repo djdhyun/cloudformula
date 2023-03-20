@@ -1,6 +1,6 @@
-## CloudFormation Stacks as a code
+# CloudFormation Stacks as a code
 
-### Prerequisite
+## Prerequisite
 
 * `aws-cli` w/ a configuration as an authorized user.
 * `cfn-lint`
@@ -8,7 +8,7 @@
     * `pip install cfn-lint`
         * For further information, please refer to [this post](https://www.techielass.com/install-cfn-lint-on-windows)
 
-### Directory Structure
+## Directory Structure
 
 ```bash
 ├── Makefile
@@ -32,9 +32,9 @@
 * `main.yaml`: A Cloudformation template that Defines all resources for the stack.
 * `${env}.properties`: Parameters to be applied to the template for the target environment.
 
-### GitOps Scenario
+## GitOps Scenario
 
-0. Beforehand, Authorize your github action bot to access aws.
+### 0. Beforehand, Authorize your github bot to access aws.
 
 * You can also take advantage of this repo as well to do so. 
 * Please refer [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) and how the [common](common) is defined within a cloudformation template. 
@@ -43,7 +43,7 @@
     * `./cloudformula apply github prod`
 * Further information about `cloudformula` will be continued in the following section
 
-1. Make Change Plans
+### 1. Make Change Plans
 
 <img src="assets/gitops_plan.png" width="540px" />
 
@@ -53,7 +53,7 @@
 * You can directly move to Cloudformation console by clicking any link of "Cloudformation Stack & Changeset" part.
 * You can also create a plan for a specific stack by your own by writing a comment with "cloudformula plan ${stack\_directory\_name}"
 
-2. Apply Change Plans
+### 2. Apply Change Plans
 
 <img src="assets/gitops_apply_success.png" width="540px" />
 
@@ -63,7 +63,7 @@
 * If all the planned changesets is applied, it means that you are good to merge the pull request!
 
 
-3. If Plan Apply fails
+### 3. If Plan Apply fails
 
 <img src="assets/gitops_apply_failed.png" width="540px" />
 
@@ -72,12 +72,14 @@
 * One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset.
 * Once you resolve the issue, you can just add commit to the pr to recreate changeset automatically, or add a comment with "cloudformula plan ${stack\_directory\_name}" and try to apply it again.
 
-4. End of the PR
+### 4. End of the PR
 
 * Once you close the pull request (either merged or not), it will cleanup the remaining changesets if there still exist.
 
 
-### Operations via make
+## Operations within your local env
+
+### Run make command
 
 * `make lint`: Run linter on all Cloudformation template files.
 * `STACK=${STACK_NAME} make plan`: Create necessary changesets for given stacks
@@ -85,7 +87,7 @@
 * `make apply`: Apply the changesets created via `make plan`
 * `make abort`: Abort and remove changesets created via `make plan`
 
-### Run command manually with `cloudfomula`
+### Run `cloudfomula`
 
 * Common usage: `./cloudfomula $subcommand $templatedir $env`
 * e.g. `./cloudfomula plan sample-application prod`
