@@ -109,7 +109,7 @@ function describe_changeset() {
 
     arn=$(arn_changeset)
     if [ -z "$arn" ]; then
-        echo "There's no active changeset for ""$_stack"""
+        echo "There's no active changeset for ""$_stack""" >&2
         return 1
     fi
 
@@ -172,13 +172,13 @@ function execute_changeset() {
     if [[ "$ret" == "EXECUTE_COMPLETE" ]]; then
         echo "Excution has been successfully completed!!"
     elif [[ "$ret" == "EXECUTE_FAILED" ]]; then
-        echo "Excution has been failed"
+        echo "Excution has been failed" >&2
     elif [[ "$ret" == "EXECUTE_IN_PROGRESS" ]]; then
-        echo "Execution is taking too long. Please check it later manually"
+        echo "Execution is taking too long. Please check it later manually" >&2
     elif [[ "$ret" == "AVAILABLE" ]]; then
-        echo "Execution is taking too long. Please check it later manually"
+        echo "Execution is taking too long. Please check it later manually" >&2
     else
-        echo "Execution ended with an unknown status"
+        echo "Execution ended with an unknown status" >&2
     fi
 }
 
