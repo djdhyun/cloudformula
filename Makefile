@@ -48,7 +48,7 @@ comment: check_params
 .PHONY: echo
 echo: check_params
 	@for file in "${STACK}/*.properties"; do \
-		echo $${file} >&2; \
+		echo $${file}; \
 		cat $${file}; \
 		echo ""; \
 	done

@@ -19,7 +19,7 @@ jobs:
         uses: khan/pull-request-comment-trigger@master
         id: check
         with:
-          trigger: 'cloudformula apply'
+          trigger: 'cloudformula'
           reaction: rocket
         env:
           GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
@@ -43,11 +43,11 @@ jobs:
           pr=$(jq --raw-output .issue.number "$GITHUB_EVENT_PATH")
           echo "cid=pr$pr" >> $GITHUB_OUTPUT
 
-      - name: CloudFormula Apply
+      - name: CloudFormula
         if: steps.check.outputs.triggered == 'true'
         env:
           CID: ${{ steps.cid.outputs.cid }}
-        id: apply
+        id: cloudformula
         run: |
           args=$(echo ${{ toJSON(github.event.comment.body) }} | sed 's/\r//g' | xargs)
           command=$(echo $args | cut -d' ' -f2)
@@ -58,31 +58,51 @@ jobs:
             cat cmd.err >> "${GITHUB_OUTPUT}"
             echo "EOF" >> "${GITHUB_OUTPUT}"
             echo "success=false" >> "${GITHUB_OUTPUT}"
-          else
+            echo "command=${args}" >> "${GITHUB_OUTPUT}"
+          elif [ -s cmd.out ]; then
             echo "message<<EOF" >> "${GITHUB_OUTPUT}"
             cat cmd.out >> "${GITHUB_OUTPUT}"
             echo "EOF" >> "${GITHUB_OUTPUT}"
             echo "success=true" >> "${GITHUB_OUTPUT}"
+            echo "command=${args}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "success=true" >> "${GITHUB_OUTPUT}"
+            echo "command=${args}" >> "${GITHUB_OUTPUT}"
           fi
 
       - name: Comment on Failure
-        if: steps.check.outputs.triggered == 'true' && steps.apply.outputs.success == 'false'
+        if: steps.check.outputs.triggered == 'true' && steps.cloudformula.outputs.success == 'false'
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            ## Change Plans have been failed to be applied ⚠️
+            ## CloudFormula Command Failed ⚠ 
+
+            * Command: `${{ steps.cloudformula.outputs.command }}`
+
             ```sh
-            ${{ steps.apply.outputs.message }}
+            ${{ steps.cloudformula.outputs.message }}
             ```
-            Please check the status and resolve the issue via Cloudformation console.
+
+            Please check the status and resolve the issue via Cloudformation console if necessary.
 
       - name: Comment on Success
-        if: steps.check.outputs.triggered == 'true' && steps.apply.outputs.success == 'true'
+        if: steps.check.outputs.triggered == 'true' && steps.cloudformula.outputs.success == 'true' && steps.cloudformula.outputs.message 
         uses: thollander/actions-comment-pull-request@v2
         with:
           message: |
-            ## Change Plans have been applied successfully 🚀
+            ## CloudFormula Command Completed Successfully ✈
+
+            * Command: `${{ steps.cloudformula.outputs.command }}`
+
             ```sh
-            ${{ steps.apply.outputs.message }}
+            ${{ steps.cloudformula.outputs.message }}
             ```
-            Now, you are good to merge the pull request!
+
+      - name: Comment on Success without message
+        if: steps.check.outputs.triggered == 'true' && steps.cloudformula.outputs.success == 'true' && !steps.cloudformula.outputs.message
+        uses: thollander/actions-comment-pull-request@v2
+        with:
+          message: |
+            ## CloudFormula Command Completed Successfully ✈
+
+            * Command: `${{ steps.cloudformula.outputs.command }}`
