@@ -101,7 +101,7 @@
 
 ### Or you can use aws-cli directly to do the same things like below.
 
-```sh
+```
 aws cloudformation create-change-set \
     --template-body file://sample-application/main.yaml \
     --parameters file://sample-application/prod.properties" \
