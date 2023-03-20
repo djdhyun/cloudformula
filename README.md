@@ -32,21 +32,42 @@
 * `main.yaml`: A Cloudformation template that Defines all resources for the stack.
 * `${env}.properties`: Parameters to be applied to the template for the target environment.
 
+### GitOps Scenario
+
+1. Make Change Plans
+
+Once you create a pull request, corresponding changesets are automatically created by github action.
+
+<img src="assets/gitops_1.png" width="540px" />
+
+
+2. Apply Change Plans
+
+
+
+
+
 ### Operations via make
 
 * `make lint`: Run linter on all Cloudformation template files.
-* `make deploy-all`: Deploy all changesets or new stacks to Cloudformation.
+* `STACK=${STACK_NAME} make plan`: Create necessary changesets for given stacks
+    * e.g. `STACK=sample-application make plan`
+* `make apply`: Apply the changesets created via `make plan`
+* `make abort`: Abort and remove changesets created via `make plan`
 
-### Template Validation (Lint)
+### Run command manually with `cloudfomula`
 
-* `cfn-lint ${target_yaml_file}`
-* To run linter across all templates in the repo.
-    * `make lint`
+* Common usage: `./cloudfomula $subcommand $templatedir $env`
+* e.g. `./cloudfomula plan sample-application prod`
+* Subcommands
+    * `plan`: Create a changeset for given template file and properties.
+    * `abort`: Destroy the changeset created via `plan` command.
+    * `describe: Describe the changeset.
+    * `apply`: Apply the changeset.
+    * `arn`: Get ARN of the changeset.
+    * `url`: Get an url where you can access the changeset in Cloudformation console.
 
-### Deploy a specific stack via manual commands in terminal
-
-* `deploy_stack sample-application prod`
-* ..or run the aws command below directly
+### Or you can use aws-cli directly to do the same things like below.
 
 ```sh
 STACK_NAME=sample-application
