@@ -131,8 +131,6 @@ function pretty_changeset() {
     echo "\`\`\`"
 }
 
-
-
 function delete_changeset() {
     local arn
     arn=$(arn_changeset)
@@ -170,9 +168,13 @@ function execute_changeset() {
     done
 
     if [[ "$ret" == "EXECUTE_COMPLETE" ]]; then
-        echo "Excution has been successfully completed!!"
+        echo "Execution has been successfully completed!!"
     elif [[ "$ret" == "EXECUTE_FAILED" ]]; then
-        echo "Excution has been failed" >&2
+        echo "Execution has been failed" >&2
+        $AWS cloudformation describe-stack-events \
+            --stack-name "$_stack" \
+            --query "StackEvents[?ResourceStatus=='UPDATE_FAILED'].ResourceStatusReason | [0]" \
+            --output text >&2
     elif [[ "$ret" == "EXECUTE_IN_PROGRESS" ]]; then
         echo "Execution is taking too long. Please check it later manually" >&2
     elif [[ "$ret" == "AVAILABLE" ]]; then
