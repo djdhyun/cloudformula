@@ -9,6 +9,7 @@ on:
 
 jobs:
   list-stacks:
+    name: List Up Changed Stacks
     runs-on: ubuntu-latest
     outputs:
       stacks: ${{ steps.changed-stacks.outputs.stacks }}

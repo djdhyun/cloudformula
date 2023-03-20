@@ -7,9 +7,11 @@ on:
 
 jobs:
   list-stacks:
+    name: List Up Changed Stacks
     uses: ./.github/workflows/gitops-list-stacks.yml
 
   plan:
+    name: Create Change Plans
     needs: [ list-stacks ]
     runs-on: ubuntu-latest
     strategy:

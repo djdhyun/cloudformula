@@ -7,6 +7,7 @@ on:
 
 jobs:
   cloudformation-linter:
+    name: Lint CloudFormation Templates
     runs-on: ubuntu-latest
 
     steps:
