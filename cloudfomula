@@ -1,6 +1,6 @@
 #!/bin/bash
 set -e
-    
+
 # envs
 AWS=${AWS:-aws}
 AWS_REGION=${AWS_REGION:-${AWS_DEFAULT_REGION}}
@@ -26,14 +26,19 @@ function deploy_stacks() {
 }
 
 function arn_stack() {
-    local deletion_filter="'REVIEW_IN_PROGRESS', 'DELETE_COMPLETE', 'CREATE_FAILED'"
+    filter=${1:-0}
+    if [ "$filter" -eq 0 ]; then
+        local deletion_filter="''"
+    else
+        local deletion_filter="'REVIEW_IN_PROGRESS', 'DELETE_COMPLETE', 'CREATE_FAILED'"
+    fi
 
     ret=$($AWS cloudformation list-stacks \
         --no-paginate \
-        --query "StackSummaries[?StackName=='$_stack' && !contains([$deletion_filter], StackStatus)].StackId" \
+        --query "StackSummaries[?StackName=='$_stack' && !contains([$deletion_filter], StackStatus)].StackId | [0]" \
         --output text || true)
 
-    if [ -z "$ret" ]; then
+    if [ -z "$ret" ] || [ "$ret" = "None" ]; then
         echo "No active stack for [$_stack]" >&2
         return 1
     fi
@@ -54,10 +59,10 @@ function arn_changeset() {
     ret=$($AWS cloudformation list-change-sets \
         --stack-name "$_stack" \
         --no-paginate \
-        --query "Summaries[?ChangeSetName=='$_changeset'].ChangeSetId" \
+        --query "Summaries[?ChangeSetName=='$_changeset'].ChangeSetId | [0]" \
         --output text || true)
 
-    if [ -z "$ret" ]; then
+    if [ -z "$ret" ] || [ "$ret" = "None" ]; then
         echo "No active changeset for [$_stack]" >&2
         return 1
     fi
@@ -144,7 +149,7 @@ function execute_changeset() {
     local arn
     arn=$(arn_changeset)
 
-    # If the change set doesn't contain any changes, 
+    # If the change set doesn't contain any changes,
     # just generously ends the code by deleting it.
     if [[ "$(describe_changeset)" == "[]" ]]; then
         delete_changeset
@@ -153,7 +158,7 @@ function execute_changeset() {
 
     $AWS cloudformation execute-change-set \
         --change-set-name "$arn"
-    
+
     # Wait until the execution is finished
     for _ in {1..50}; do
         sleep 10
@@ -189,7 +194,7 @@ function create_changeset() {
     local change_type
 
     # 1. Check if stack exists
-    if [ -z "$(arn_stack 2> /dev/null)" ]; then
+    if [ -z "$(arn_stack 1 2> /dev/null)" ]; then
         change_type="CREATE"
     else
         change_type="UPDATE"
@@ -197,7 +202,7 @@ function create_changeset() {
 
     # 2. Delete previous change sets if exists
     delete_changeset 2> /dev/null || true
-    
+
     # 3. Create a change set
     ret=$($AWS cloudformation create-change-set \
         --template-body file://"$_template_file" \
@@ -257,41 +262,51 @@ function export_common_vars() {
 function main {
     local _command=$1
     export_common_vars "$@"
-    set --
 
     case "$_command" in
         create_changeset|plan)
-            create_changeset
+            shift 4;
+            create_changeset "$@"
             ;;
         delete_changeset|abort)
-            delete_changeset
+            shift 4;
+            delete_changeset "$@"
             ;;
         describe_changeset|describe)
-            describe_changeset
+            shift 4;
+            describe_changeset "$@"
             ;;
         pretty_changeset|comment)
-            pretty_changeset
+            shift 4;
+            pretty_changeset "$@"
             ;;
         execute_changeset|apply)
-            execute_changeset
+            shift 4;
+            execute_changeset "$@"
             ;;
         url_changeset|url)
-            url_changeset
-            ;;
-        deploy_stack)
-            deploy_stack
-            ;;
-        arn_stack)
-            arn_stack
-            ;;
-        url_stack)
-            url_stack
+            shift 4;
+            url_changeset "$@"
             ;;
         status_changeset)
-            status_changeset
+            shift 4;
+            status_changeset "$@"
             ;;
         arn_changeset|arn)
-            arn_changeset
+            shift 4;
+            arn_changeset "$@"
+            ;;
+        deploy_stack)
+            shift 3;
+            deploy_stack "$@"
+            ;;
+        arn_stack)
+            shift 3;
+            arn_stack "$@"
+            ;;
+        url_stack)
+            shift 3;
+            url_stack "$@"
             ;;
         *)
             echo "Invalid subcommand: $_command"

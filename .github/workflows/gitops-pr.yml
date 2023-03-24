@@ -3,7 +3,7 @@ name: Make all change plans
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, ready_for_review, closed]
+    types: [opened, synchronize, ready_for_review, closed, reopened]
 
 jobs:
   list-stacks:
@@ -71,8 +71,6 @@ jobs:
         with:
           message: |
             ## CloudFormula Command Failed ⚠ 
-
-            * Command: `${{ steps.plan.outputs.command }}`
 
             ```sh
             ${{ steps.plan.outputs.message }}
