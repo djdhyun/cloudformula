@@ -8,29 +8,36 @@
     * `pip install cfn-lint`
         * For further information, please refer to [this post](https://www.techielass.com/install-cfn-lint-on-windows)
 
-## Directory Structure
+## Cloudformation Stack Directory
+
+* A stack directory is where you have the `main.yaml` and properties file.
+    * `main.yaml`: A Cloudformation template that defines all resources for the stack.
+    * `${env}.properties`: Parameters to be applied to the template for the target environment.
+* For example, if you have a directory structure as below, you will have 4 cloudformation directories (`common, app-a, apps/app-b app-c`).
 
 ```bash
 ├── Makefile
 ├── README.md
 ├── cloudfomula
-├── common
+├── app-a
 │   ├── main.yaml
 │   └── prod.properties
-├── sample-application
+├── app-b
 │   ├── main.yaml
-│   └── prod.properties
-└── your-another-application
-    ├── main.yaml
-    ├── dev.properties
-    └── prod.properties
+│   ├── dev.properties
+│   └── prod.properties
+└── apps
+   └── app-c
+       ├── main.yaml
+       └── dev.properties
 ```
 
+* Each directory name corresponds with each CloudFormation stack. The actual stack name will be in the form of `${stack_directory_name}-${properties_file_name}`
+* The stack name will be the whole directory path if you have a nested directory as a stack directory. OS separator('/') will be replaced with '-'.
+* Stack directory names must satisfy regular expression pattern `[a-zA-Z][-a-zA-Z0-9]`
+* In a nutshell, If you have deployed all cloudformation stacks for the directory structure above, you will have the following stacks deployed.
+ 
 <img src="assets/cloudformation_stack.png" width="540px" />
-
-* Each directory names corresponds with each CloudFormation stacks. The actual stack name is composed of `${stack_directory_name}-${properties_file_name}`
-* `main.yaml`: A Cloudformation template that defines all resources for the stack.
-* `${env}.properties`: Parameters to be applied to the template for the target environment.
 
 ## GitOps Scenario
 
@@ -38,7 +45,7 @@
 
 * You can also take advantage of this repo as well to do so. 
 * Please refer to [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) and how the [github](github) is defined within a cloudformation template. 
-* Once your template is ready, you can use these command to apply it.
+* Once your template is ready, you can use these commands to apply it.
     * `./cloudformula plan github prod`
     * `./cloudformula apply github prod`
 * Further information about `cloudformula` will be continued in the following section.
