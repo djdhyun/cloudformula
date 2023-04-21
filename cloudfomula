@@ -4,6 +4,13 @@ set -e
 # envs
 AWS=${AWS:-aws}
 AWS_REGION=${AWS_REGION:-${AWS_DEFAULT_REGION}}
+AWS_REGION=${AWS_REGION:-$($AWS configure get region)}
+
+case "$OSTYPE" in
+  linux-gnu*) PATH_SEP="/";;
+  cygwin*|msys*) PATH_SEP="\\";;
+  *) PATH_SEP="/";; # default to Unix-like path separator
+esac
 
 function deploy_stacks() {
     if [ $# -lt 1 ]; then
@@ -15,7 +22,7 @@ function deploy_stacks() {
 
     for stack in "$@"
     do
-        for PROPERTIES_FILE in "$_stack"/*.properties;
+        for PROPERTIES_FILE in "$_stack""$PATH_SEP"*.properties;
         do
             _env=$("$(basename "$PROPERTIES_FILE")" | cut -d. -f1)
             deploy_stack "$_stack" "$_env"
@@ -131,9 +138,15 @@ function pretty_changeset() {
     echo "Cloudformation Stack: [\`$_stack\`]($(url_stack))"
     echo "Cloudformation Changeset: [\`$_changeset\`]($(url_changeset))"
     echo ""
+    echo "<details>"
+    echo "  <summary>Changeset Detail</summary>"
+    echo ""
     echo "\`\`\`json"
     describe_changeset
     echo "\`\`\`"
+    echo ""
+    echo "</details>"
+    echo ""
 }
 
 function delete_changeset() {
@@ -173,20 +186,32 @@ function execute_changeset() {
     done
 
     if [[ "$ret" == "EXECUTE_COMPLETE" ]]; then
-        echo "Execution has been successfully completed!!"
+        echo "-- [$_stack] Changeset: $_changeset --"
+        echo "Changeset has been successfully applied!!"
+        ret=0
     elif [[ "$ret" == "EXECUTE_FAILED" ]]; then
-        echo "Execution has been failed" >&2
+        echo "-- [$_stack] Changeset: $_changeset --" >&2
+        echo "Applying the changeset has been failed." >&2
         $AWS cloudformation describe-stack-events \
             --stack-name "$_stack" \
             --query "StackEvents[?ResourceStatus=='UPDATE_FAILED'].ResourceStatusReason | [0]" \
             --output text >&2
+        ret=1
     elif [[ "$ret" == "EXECUTE_IN_PROGRESS" ]]; then
-        echo "Execution is taking too long. Please check it later manually" >&2
+        echo "-- [$_stack] Changeset: $_changeset --" >&2
+        echo "Applying the changeset is taking too long. Please check it later manually" >&2
+        ret=1
     elif [[ "$ret" == "AVAILABLE" ]]; then
-        echo "Execution is taking too long. Please check it later manually" >&2
+        echo "-- [$_stack] Changeset: $_changeset --" >&2
+        echo "Applying the changeset is taking too long. Please check it later manually" >&2
+        ret=1
     else
-        echo "Execution ended with an unknown status" >&2
+        echo "-- [$_stack] Changeset: $_changeset --" >&2
+        echo "Applying the changeset ended with an unknown status" >&2
+        ret=1
     fi
+
+    return $ret
 }
 
 function create_changeset() {
@@ -241,10 +266,10 @@ function export_common_vars() {
     local suffix=${4:+"-$4"}
 
     export _env=$3
-    export _changeset="cs-$stack-$_env$suffix"
-    export _template_file="$stack/main.yaml"
-    export _properties_file="$stack/$_env.properties"
-    export _stack="$stack-$_env"
+    export _changeset="cs-${stack//[\/\\]/-}-$_env$suffix"
+    export _template_file="$stack""$PATH_SEP""main.yaml"
+    export _properties_file="$stack""$PATH_SEP""$_env.properties"
+    export _stack="${stack//[\/\\]/-}-$_env"
 
     if [ ! -f "$_template_file" ]; then
         echo "$_template_file does not exist."

@@ -28,6 +28,15 @@ jobs:
         if: steps.check.outputs.triggered == 'true'
         uses: actions/checkout@v3
 
+      - name: Checkout Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR_URL="${{ github.event.issue.pull_request.url }}"
+          PR_NUM=${PR_URL##*/}
+          echo "Checking out from PR #$PR_NUM based on URL: $PR_URL"
+          hub pr checkout $PR_NUM
+
       - name: Configure AWS credentials
         if: steps.check.outputs.triggered == 'true'
         uses: aws-actions/configure-aws-credentials@master

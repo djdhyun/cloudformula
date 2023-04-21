@@ -88,6 +88,8 @@ jobs:
 
             ${{ steps.plan.outputs.message }}
 
+            ##
+
             Now, you may want to run the following commands as a next step.
 
             * cloudformula apply ${{ env.STACK }} ${{ env.CID }}
