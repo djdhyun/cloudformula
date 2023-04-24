@@ -17,7 +17,7 @@
 * A stack directory is where you have a `main.yaml` and properties files.
     * `main.yaml`: A Cloudformation template that defines all resources for the stack.
     * `${env}.properties`: Parameters to be applied to the template for the target environment.
-* For example, if you have a directory structure as below, you will have 3 cloudformation directories as `app-a, apps/app-b app-c`.
+* For example, if you have a directory structure as below, you will have 3 cloudformation directories as `app-a, app-b, apps/app-c`.
 
 ```bash
 ├── Makefile
@@ -66,7 +66,7 @@
 ### 4. Register github action secrets.
 
 * `AWS_IAM_ROLE`: output value of `AWSIamRole` in `github-prod` stack.
-* `AWS_REGION`: aws region name where you resource reside. (e.g. us-west-2)
+* `AWS_REGION`: aws region name where you resource resides. (e.g. us-west-2)
 
 <img src="assets/cloudformation_stack_2.png" width="540px" />
 
@@ -97,7 +97,7 @@
 
 * It will breifly inform you the reason why you failed.
 * If you feel lack of information, you can move to Cloudformation console by clicking the links provided by the previous `plan` comment.
-* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset. Refer to [github/main.yaml](#0-beforehand-authorize-your-github-bot-to-access-aws) for the guidelines.
+* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset. Refer to [github/main.yaml](#2-prepare-a-cloudformation-directory-for-github-bot) for the guidelines.
 * Once you resolve the issue, you can add another commit to the pr or close and reopen the pr to recreate changesets. Try to apply them again when you're ready.
 
 ### 4. End of the PR
