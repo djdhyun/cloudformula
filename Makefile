@@ -1,5 +1,5 @@
 SHELL:=/bin/bash
-CLOUDFOMULA=./cloudfomula
+CLOUDFOMULA=./cloudformula
 
 STACKS=sample-application
 
