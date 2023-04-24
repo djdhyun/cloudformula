@@ -51,7 +51,7 @@
 * Determine `Owner` and `Repository name`.
 * Don't forget to make it private if you want to keep your aws resources secure.
 
-### 2. Prepare a cloudformation directory for github bot.
+### 2. Prepare a cloudformation stack directory for github bot.
 
 * This repo provides a sample stack directory ([github directory](github)) for this. Please refer to [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) for the background knowledge.
 * Replace the parameters of [github/prod.properties](github/prod.properties) with your repository name and owner.
@@ -97,7 +97,7 @@
 
 * It will breifly inform you the reason why you failed.
 * If you feel lack of information, you can move to Cloudformation console by clicking the links provided by the previous `plan` comment.
-* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset. Refer to [github/main.yaml](#2-prepare-a-cloudformation-directory-for-github-bot) for the guidelines.
+* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it on your own before resuming to apply the changeset. Refer to the [guidelines of cloudformation stack directory for github bot](#2-prepare-a-cloudformation-directory-for-github-bot) for further information.
 * Once you resolve the issue, you can add another commit to the pr or close and reopen the pr to recreate changesets. Try to apply them again when you're ready.
 
 ### 4. End of the PR
