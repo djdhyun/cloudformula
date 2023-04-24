@@ -39,18 +39,25 @@
 * Stack directory names must satisfy regular expression pattern `[a-zA-Z][-a-zA-Z0-9]`
 * If you have deployed all cloudformation stacks declared in the directory structure above, you will have the following stacks deployed.
  
-<img src="assets/cloudformation_stack.png" width="540px" />
+<img src="assets/cloudformation_stack_1.png" width="540px" />
 
 ## GitOps Scenario
 
 ### 0. Beforehand, Authorize your github bot to access aws.
 
 * You can also utilize this repo as well to do so. Please refer to [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) and how the [github directory](github) is composed in this repo.
-* In this repo, github bot is only authorized for S3 to represent a sample use case. You can check [github/main.yaml](https://github.com/djdhyun/cloudformation-gitops/blob/main/github/main.yaml#L40-L58) to find out how it is configured. The scope of authority granted to github bot is entirely your decision considering how far you want the github bot to maintain aws resources and Amazon IAM best practice of granting least privilege. To put it to the extreme, if you don't care about the rule and don't want to be bothered in the future, you can grant the administrator role to github bot.
+* In this repo, github bot is only authorized for S3 to represent a sample use case. You can check [github/main.yaml](https://github.com/djdhyun/cloudformation-gitops/blob/main/github/main.yaml#L40-L58) to find out how it is configured and revise it. The scope of authority granted to github bot is entirely your decision considering how far you want to maintain aws resources by gitops. To put it to the extreme, if you don't care about the AWS IAM rule of granting least privilege and don't want to be bothered in the future, you can simply grant the administrator role to github bot.
 
-* Once your template is ready, you can use these commands to apply it.
+* Once your template is ready, you can use these commands to apply it. This will create a new Cloudformation stack named `github-prod`.
     * `./cloudformula plan github prod`
     * `./cloudformula apply github prod`
+
+* Register github action secrets.
+    * `AWS_IAM_ROLE`: output value of `AWSIamRole` in `github-prod` stack.
+    * `AWS_REGION`: aws region name where you resource reside. (e.g. us-west-2)
+
+    <img src="assets/cloudformation_stack_2.png" width="540px" />
+    I
 * Further information about `cloudformula` will be continued in the following section.
 
 ### 1. Make Change Plans
