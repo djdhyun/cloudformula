@@ -5,10 +5,12 @@
 ## Prerequisite
 
 * `aws-cli` w/ a configuration as an authorized user.
+* You should activate an AWS profile by either exporting `AWS_DEFAULT_PROFILE` or setting a default profile by `aws configure`.
 * `cfn-lint`
     * `brew install cfn-lint` (for mac users only)
     * `pip install cfn-lint`
         * For further information, please refer to [this post](https://www.techielass.com/install-cfn-lint-on-windows)
+
 
 ## Cloudformation Stack Directories
 
@@ -41,24 +43,34 @@
  
 <img src="assets/cloudformation_stack_1.png" width="540px" />
 
+## Setup your repository
+
+### 1. Create your own github repository.
+
+* Click `Use this template` and `Create a new repository` buttons.
+* Determine `Owner` and `Repository name`.
+* Don't forget to make it private if you want to keep your aws resources secure.
+
+### 2. Prepare a cloudformation directory for github bot.
+
+* This repo provides a sample stack directory ([github directory](github)) for this. Please refer to [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) for the background knowledge.
+* Replace the parameters of [github/prod.properties](github/prod.properties) with your repository name and owner.
+* In this repo, github bot is only authorized for S3 to represent a sample use case. You can check [github/main.yaml](github/main.yaml#L40-L58) to find out how it is configured and you can revise this part as you want. The scope of authority granted to github bot is entirely your decision considering how far you want to maintain aws resources by gitops. To put it to the extreme, if you don't care about the AWS IAM rule of granting least privilege and don't want to be bothered in the future, you can simply grant the administrator role to github bot.
+
+### 3. Authorize your github bot to access aws.
+
+* Once your template is ready, you can run this command to apply it. 
+    * `./cloudformula plan github prod cli && ./cloudformula apply github prod cli`
+* This will create a new Cloudformation stack named `github-prod`.
+
+### 4. Register github action secrets.
+
+* `AWS_IAM_ROLE`: output value of `AWSIamRole` in `github-prod` stack.
+* `AWS_REGION`: aws region name where you resource reside. (e.g. us-west-2)
+
+<img src="assets/cloudformation_stack_2.png" width="540px" />
+
 ## GitOps Scenario
-
-### 0. Beforehand, Authorize your github bot to access aws.
-
-* You can also utilize this repo as well to do so. Please refer to [aws-actions/configure-aws-credentials](https://github.com/aws-actions/configure-aws-credentials#usage) and how the [github directory](github) is composed in this repo.
-* In this repo, github bot is only authorized for S3 to represent a sample use case. You can check [github/main.yaml](https://github.com/djdhyun/cloudformation-gitops/blob/main/github/main.yaml#L40-L58) to find out how it is configured and revise it. The scope of authority granted to github bot is entirely your decision considering how far you want to maintain aws resources by gitops. To put it to the extreme, if you don't care about the AWS IAM rule of granting least privilege and don't want to be bothered in the future, you can simply grant the administrator role to github bot.
-
-* Once your template is ready, you can use these commands to apply it. This will create a new Cloudformation stack named `github-prod`.
-    * `./cloudformula plan github prod`
-    * `./cloudformula apply github prod`
-
-* Register github action secrets.
-    * `AWS_IAM_ROLE`: output value of `AWSIamRole` in `github-prod` stack.
-    * `AWS_REGION`: aws region name where you resource reside. (e.g. us-west-2)
-
-    <img src="assets/cloudformation_stack_2.png" width="540px" />
-    I
-* Further information about `cloudformula` will be continued in the following section.
 
 ### 1. Make Change Plans
 
@@ -85,8 +97,8 @@
 
 * It will breifly inform you the reason why you failed.
 * If you feel lack of information, you can move to Cloudformation console by clicking the links provided by the previous `plan` comment.
-* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset. Please refer to (github/main.yaml)[https://github.com/djdhyun/cloudformation-gitops/blob/main/github/main.yaml#L40-L58] to 
-* Once you resolve the issue, you can add another commit to the pr or add a comment with "cloudformula plan ${stack\_directory\_name}" to recreate changesets. Try to apply them again when you're ready.
+* One of the common causes is that the github bot doesn't have enough authority to control the aws resources. If so, you should grant it by your own before resuming to apply the changeset. Refer to [github/main.yaml](#0-beforehand-authorize-your-github-bot-to-access-aws) for the guidelines.
+* Once you resolve the issue, you can add another commit to the pr or close and reopen the pr to recreate changesets. Try to apply them again when you're ready.
 
 ### 4. End of the PR
 
@@ -103,9 +115,10 @@
     * e.g. `./cloudfomula plan sample-application prod my-suffix`
 * Subcommands
     * `plan`: Create a changeset for given template file and properties.
+    * `url`: Get an url where you can access the changeset in Cloudformation console.
+    * `apply`: Apply the changeset.
     * `abort`: Destroy the changeset created via `plan` command.
     * `describe`: Describe the changeset.
-    * `apply`: Apply the changeset.
     * `arn`: Get ARN of the changeset.
-    * `url`: Get an url where you can access the changeset in Cloudformation console.
+    
 
