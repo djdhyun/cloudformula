@@ -12,7 +12,7 @@
         * For further information, please refer to [this post](https://www.techielass.com/install-cfn-lint-on-windows)
 
 
-## Cloudformation Stack Directories
+## About Cloudformation Stack Directories
 
 * A stack directory is where you have a `main.yaml` and properties files.
     * `main.yaml`: A Cloudformation template that defines all resources for the stack.
@@ -37,7 +37,7 @@
 ```
 
 * Each directory name corresponds with each CloudFormation stack. The actual stack name will be in the form of `${stack_directory_name}-${properties_file_name}`
-* The stack name will be the whole directory path if you have a nested directory as a stack directory. OS separator('/') will be replaced with '-'.
+* The stack name will be the whole directory path if you have a nested directory as a stack directory. OS separators('/') will be replaced with '-'.
 * Stack directory names must satisfy regular expression pattern `[a-zA-Z][-a-zA-Z0-9]`
 * If you have deployed all cloudformation stacks declared in the directory structure above, you will have the following stacks deployed.
  
