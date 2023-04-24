@@ -5,7 +5,7 @@
 ## Prerequisite
 
 * `aws-cli` w/ a configuration as an authorized user.
-* You should activate an AWS profile by either exporting `AWS_DEFAULT_PROFILE` or setting a default profile by `aws configure`.
+* You should activate an AWS profile by either exporting `AWS_DEFAULT_PROFILE` or setting a default profile.
 * `cfn-lint`
     * `brew install cfn-lint` (for mac users only)
     * `pip install cfn-lint`
